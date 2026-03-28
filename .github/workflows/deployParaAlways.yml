@@ -1,29 +1,40 @@
-name: 🚀 Tarea de Despliegue
+name: Deploy to Alwaysdata
 
 on:
-   push:
-     branches:
-       - main
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
-    name: 🎉 Trabajo de Despliegue
+    name: FTP deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🚚 Obteniendo el código más reciente
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 📂 Sincronizando archivos via FTP
+      - name: Create production config
+        shell: bash
+        env:
+          APP_CONFIG_PHP: ${{ secrets.APP_CONFIG_PHP }}
+        run: |
+          if [ -z "$APP_CONFIG_PHP" ]; then
+            echo "Missing APP_CONFIG_PHP secret."
+            exit 1
+          fi
+          printf "%s" "$APP_CONFIG_PHP" > config.php
+
+      - name: Sync files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ftp-repoclase.alwaysdata.net # Change if using another host
+          server: ftp-repoclase.alwaysdata.net
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: www/ # Replace with your correct path
+          server-dir: www/
           protocol: ftps
           timeout: 86400000
           log-level: standard
           exclude: |
-           .git/**
-           .github/**
+            .git/**
+            .github/**
