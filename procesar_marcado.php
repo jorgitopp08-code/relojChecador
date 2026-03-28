@@ -1,42 +1,79 @@
 <?php
+session_start(); // Necesario para mostrar mensajes de éxito/error
 include 'db.php';
-date_default_timezone_set('America/Bogota'); // Ajusta a tu zona horaria
+date_default_timezone_set('America/Bogota');
 
-if ($_POST) {
-    $cedula = $_POST['cedula'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cedula'], $_POST['accion'])) {
+    
+    $cedula = trim($_POST['cedula']);
     $accion = $_POST['accion'];
     $fecha_actual = date('Y-m-d');
     $hora_actual = date('H:i:s');
 
-    // Verificar si el empleado existe
-    $check_emp = mysqli_query($conn, "SELECT * FROM empleados WHERE cedula = '$cedula'");
-    if (mysqli_num_rows($check_emp) == 0) {
-        die("<script>alert('Empleado no encontrado'); window.location='index.php';</script>");
+    // 1. Verificar si el empleado existe con Prepared Statements
+    $stmt = $conn->prepare("SELECT nombre FROM empleados WHERE cedula = ?");
+    $stmt->bind_param("s", $cedula);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $empleado = $result->fetch_assoc();
+
+    if (!$empleado) {
+        $_SESSION['mensaje'] = "Error: Cédula no registrada.";
+        $_SESSION['tipo_mensaje'] = "danger";
+        header("Location: index.php");
+        exit();
     }
 
-    // Buscar si ya tiene un registro hoy
-    $res = mysqli_query($conn, "SELECT * FROM asistencias WHERE cedula_empleado = '$cedula' AND fecha = '$fecha_actual'");
-    $asistencia = mysqli_fetch_assoc($res);
+    // 2. Buscar si ya existe un registro para hoy
+    $stmt = $conn->prepare("SELECT * FROM asistencias WHERE cedula_empleado = ? AND fecha = ?");
+    $stmt->bind_param("ss", $cedula, $fecha_actual);
+    $stmt->execute();
+    $asistencia = $stmt->get_result()->fetch_assoc();
 
-    if ($accion == 'ingreso') {
+    // 3. Lógica Pro: Procesar según la acción
+    if ($accion === 'ingreso') {
         if ($asistencia) {
-            echo "<script>alert('Ya registraste entrada hoy'); window.location='index.php';</script>";
+            $_SESSION['mensaje'] = "{$empleado['nombre']}, ya registraste tu ingreso hoy a las {$asistencia['hora_ingreso']}.";
+            $_SESSION['tipo_mensaje'] = "warning";
         } else {
-            mysqli_query($conn, "INSERT INTO asistencias (cedula_empleado, fecha, hora_ingreso) VALUES ('$cedula', '$fecha_actual', '$hora_actual')");
+            $stmt = $conn->prepare("INSERT INTO asistencias (cedula_empleado, fecha, hora_ingreso) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $cedula, $fecha_actual, $hora_actual);
+            if ($stmt->execute()) {
+                $_SESSION['mensaje'] = "Ingreso registrado con éxito. ¡Hola, {$empleado['nombre']}!";
+                $_SESSION['tipo_mensaje'] = "success";
+            }
         }
     } else {
+        // Acciones que requieren que ya exista un ingreso (refri, salida)
         if (!$asistencia) {
-            echo "<script>alert('Primero debes marcar ENTRADA'); window.location='index.php';</script>";
+            $_SESSION['mensaje'] = "Error: Debes registrar primero la ENTRADA.";
+            $_SESSION['tipo_mensaje'] = "danger";
         } else {
-            // Determinar qué columna actualizar según el botón pulsado
-            $columna = "";
-            if ($accion == 'ini_refri') $columna = "inicio_refrigerio";
-            if ($accion == 'fin_refri') $columna = "fin_refrigerio";
-            if ($accion == 'salida') $columna = "hora_salida";
+            // Mapeo de columnas según el botón
+            $columnas_permitidas = [
+                'ini_refri' => 'inicio_refrigerio',
+                'fin_refri' => 'fin_refrigerio',
+                'salida'    => 'hora_salida'
+            ];
 
-            mysqli_query($conn, "UPDATE asistencias SET $columna = '$hora_actual' WHERE id = " . $asistencia['id']);
+            if (array_key_exists($accion, $columnas_permitidas)) {
+                $columna = $columnas_permitidas[$accion];
+
+                // Verificar si ya se marcó esa hora anteriormente
+                if (!empty($asistencia[$columna])) {
+                    $_SESSION['mensaje'] = "Esta acción ya fue registrada anteriormente.";
+                    $_SESSION['tipo_mensaje'] = "info";
+                } else {
+                    $stmt = $conn->prepare("UPDATE asistencias SET $columna = ? WHERE id = ?");
+                    $stmt->bind_param("si", $hora_actual, $asistencia['id']);
+                    $stmt->execute();
+                    $_SESSION['mensaje'] = "Registro actualizado correctamente.";
+                    $_SESSION['tipo_mensaje'] = "success";
+                }
+            }
         }
     }
+
     header("Location: index.php");
+    exit();
 }
-?>

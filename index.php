@@ -1,3 +1,15 @@
+<!-- Bloque de Mensajes Dinámicos -->
+<?php 
+session_start();
+if (isset($_SESSION['mensaje'])): ?>
+    <div class="alert alert-<?= $_SESSION['tipo_mensaje']; ?> alert-dismissible fade show" role="alert">
+        <strong>Notificación:</strong> <?= $_SESSION['mensaje']; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php 
+    unset($_SESSION['mensaje']); 
+    unset($_SESSION['tipo_mensaje']); 
+endif; ?>
 <?php include 'db.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
