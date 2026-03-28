@@ -2,7 +2,7 @@
 $host = "mysql-apijorge.alwaysdata.net";
 $user = "apijorge";
 $pass = "clase1234";
-$db = "apijorge_reloj_checador";
+$db = "apijorge_reloj_lavoral";
 
 $conn = new mysqli($host, $user, $pass, $db);
 
