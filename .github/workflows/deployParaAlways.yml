@@ -1,68 +1,29 @@
-name: Deploy to Alwaysdata
+name: 🚀 Tarea de Despliegue
 
 on:
-  push:
-    branches:
-      - main
+   push:
+     branches:
+       - main
 
 jobs:
   deploy:
-    name: FTP deploy
+    name: 🎉 Trabajo de Despliegue
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 🚚 Obteniendo el código más reciente
         uses: actions/checkout@v4
 
-      - name: Create production config
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: |
-          python - <<'PY'
-          import os
-          import sys
-
-          def php_quote(value: str) -> str:
-              return value.replace("\\", "\\\\").replace("'", "\\'")
-
-          required = ["DB_HOST", "DB_NAME", "DB_USER", "DB_PASSWORD"]
-          missing = [key for key in required if not os.getenv(key)]
-
-          if missing:
-              print(f"Missing required secrets: {', '.join(missing)}")
-              sys.exit(1)
-
-          config = {
-              "DB_HOST": os.getenv("DB_HOST", ""),
-              "DB_PORT": os.getenv("DB_PORT", "3306"),
-              "DB_NAME": os.getenv("DB_NAME", ""),
-              "DB_USER": os.getenv("DB_USER", ""),
-              "DB_PASSWORD": os.getenv("DB_PASSWORD", ""),
-          }
-
-          lines = ["<?php", "", "return ["]
-          for key, value in config.items():
-              lines.append(f"    '{key}' => '{php_quote(value)}',")
-          lines.append("];")
-
-          with open("config.php", "w", encoding="utf-8") as file:
-              file.write("\n".join(lines))
-          PY
-
-      - name: Sync files via FTP
+      - name: 📂 Sincronizando archivos via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ftp-repoclase.alwaysdata.net
+          server: ftp-repoclase.alwaysdata.net # Change if using another host
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: www/
+          server-dir: www/ # Replace with your correct path
           protocol: ftps
           timeout: 86400000
           log-level: standard
           exclude: |
-            .git/**
-            .github/**
+           .git/**
+           .github/**

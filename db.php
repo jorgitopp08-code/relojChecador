@@ -9,6 +9,7 @@ function config_value(array $config, string $key, string $default = ''): string
 {
     if (array_key_exists($key, $config)) {
         return (string) $config[$key];
+        
     }
 
     $envValue = getenv($key);
