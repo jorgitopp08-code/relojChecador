@@ -18,6 +18,7 @@ function redirect_with_message(string $location, string $message, string $type =
     ];
 
     header("Location: {$location}");
+    
     exit;
 }
 
