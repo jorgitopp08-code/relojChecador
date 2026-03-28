@@ -1,15 +1,30 @@
 <!-- Bloque de Mensajes Dinámicos -->
-<?php 
-session_start();
-if (isset($_SESSION['mensaje'])): ?>
-    <div class="alert alert-<?= $_SESSION['tipo_mensaje']; ?> alert-dismissible fade show" role="alert">
-        <strong>Notificación:</strong> <?= $_SESSION['mensaje']; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<?php if (isset($_SESSION['mensaje'])): 
+    // Configurar icono según el tipo
+    $icono = 'info-circle';
+    if($_SESSION['tipo_mensaje'] == 'success') $icono = 'check-circle';
+    if($_SESSION['tipo_mensaje'] == 'danger') $icono = 'exclamation-octagon';
+    if($_SESSION['tipo_mensaje'] == 'warning') $icono = 'exclamation-triangle';
+?>
+    <div class="toast-container">
+        <div class="custom-toast alert-<?= $_SESSION['tipo_mensaje']; ?>">
+            <div class="toast-icon">
+                <i class="bi bi-<?= $icono; ?>"></i> <!-- Requiere Bootstrap Icons -->
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">Notificación</div>
+                <div class="toast-msg"><?= $_SESSION['mensaje']; ?></div>
+            </div>
+            <button type="button" class="btn-close-custom" onclick="this.parentElement.remove()">
+                &times;
+            </button>
+            <div class="toast-progress"></div>
+        </div>
     </div>
     <?php 
     unset($_SESSION['mensaje']); 
     unset($_SESSION['tipo_mensaje']); 
-endif; ?>
+endif; ?> 
 <?php include 'db.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -23,6 +38,111 @@ endif; ?>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     
     <style>
+        /* Importar iconos de Bootstrap si no los tienes */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
+
+.toast-container {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    z-index: 9999;
+    perspective: 1000px;
+}
+
+.custom-toast {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    min-width: 320px;
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    border-left: 6px solid #ccc;
+    position: relative;
+    overflow: hidden;
+    animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Colores según el tipo */
+.alert-success { border-left-color: #10b981; }
+.alert-success .toast-icon { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+
+.alert-danger { border-left-color: #ef4444; }
+.alert-danger .toast-icon { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+.alert-warning { border-left-color: #f59e0b; }
+.alert-warning .toast-icon { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+
+.alert-info { border-left-color: #3b82f6; }
+.alert-info .toast-icon { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+
+/* Elementos internos */
+.toast-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 15px;
+}
+
+.toast-content {
+    flex-grow: 1;
+}
+
+.toast-title {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+.toast-msg {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.btn-close-custom {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 5px;
+    line-height: 1;
+}
+
+/* Barra de progreso animada */
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    background: rgba(0,0,0,0.05);
+}
+
+.toast-progress::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: currentColor; /* Usa el color del borde del padre */
+    animation: progress 5s linear forwards;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(110%) scale(0.8); opacity: 0; }
+    to { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+@keyframes progress {
+    from { width: 100%; }
+    to { width: 0%; }
+}
         :root {
             --primary-bg: #f0f2f5;
             --accent-color: #4f46e5;
@@ -183,3 +303,13 @@ endif; ?>
     </script>
 </body>
 </html>
+<script>
+    // Auto-eliminar la notificación después de 5 segundos
+    setTimeout(() => {
+        const toast = document.querySelector('.custom-toast');
+        if (toast) {
+            toast.style.animation = 'slideInRight 0.5s reverse forwards';
+            setTimeout(() => toast.remove(), 500);
+        }
+    }, 5000);
+</script>
