@@ -1,9 +1,12 @@
 <?php
+$host = "mysql-apijorge.alwaysdata.net";
+$user = "apijorge";
+$pass = "clase1234";
+$db = "apijorge_reloj_checador";
 
-return [
-    'DB_HOST' => 'mysql-apijorge.alwaysdata.net',
-    'DB_PORT' => 3306,
-    'DB_NAME' => 'apijorge_reloj_checador',
-    'DB_USER' => 'apijorge',
-    'DB_PASSWORD' => 'clase1234',
-];
+$conn = new mysqli($host, $user, $pass, $db);
+
+if ($conn->connect_error) {
+    die("Error de conexión: " . $conn->connect_error);
+}
+?>
