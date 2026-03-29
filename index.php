@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])
         }
     }
     header("Location: index.php");
+    
     exit();
 }
 ?>
