@@ -13,7 +13,7 @@
         :root {
             --bg-body: #f8fafc; /* Fondo claro sutil */
             --bg-card: #ffffff;
-            --primary: #4f46e5; /* Indigo vibrante */
+            --primary: #9d9ca8; /* Indigo vibrante */
             --secondary: #64748b;
             --success: #10b981;
             --warning: #f59e0b;
@@ -24,7 +24,7 @@
 
         /* Si prefieres mantener un modo oscuro pero NO NEGRO, usa estos: */
         body.dark-theme {
-            --bg-body: #31529f; /* Azul noche profundo */
+            --bg-body: #0b0c0e; /* Azul noche profundo */
             --bg-card: #43608e; /* Azul pizarra */
             --text-main: #f1f5f9;
             --secondary: #94a3b8;
