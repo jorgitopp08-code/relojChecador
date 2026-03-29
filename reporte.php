@@ -19,13 +19,13 @@
             --warning: #f59e0b;
             --info: #0ea5e9;
             --danger: #ef4444;
-            --text-main: #1e293b;
+            --text-main: #e9ecf1;
         }
 
         /* Si prefieres mantener un modo oscuro pero NO NEGRO, usa estos: */
         body.dark-theme {
-            --bg-body: #0f172a; /* Azul noche profundo */
-            --bg-card: #1e293b; /* Azul pizarra */
+            --bg-body: #31529f; /* Azul noche profundo */
+            --bg-card: #43608e; /* Azul pizarra */
             --text-main: #f1f5f9;
             --secondary: #94a3b8;
         }
@@ -62,8 +62,8 @@
             background: var(--bg-card);
             border-radius: 24px;
             padding: 30px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 25px -5px rgba(174, 163, 163, 0.92), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(184, 175, 175, 0.2);
         }
 
         /* Estilo de la tabla */

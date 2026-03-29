@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])
 
         .btn-add-floating:hover {
             background: white;
-            color: #6366f1;
+            color: #4b4b56;
             transform: translateY(-3px);
         }
 
@@ -188,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])
     <!-- Notificaciones -->
     <?php if(isset($_SESSION['mensaje'])): ?>
         <div class="custom-toast">
-            <i class="ph-bold ph-bell" style="color: #6366f1; font-size: 1.5rem;"></i>
+            <i class="ph-bold ph-bell" style="color: #0e0f7acf; font-size: 1.5rem;"></i>
             <span style="font-weight: 600; color: #1e293b;"><?= $_SESSION['mensaje'] ?></span>
         </div>
         <script>setTimeout(() => document.querySelector('.custom-toast').remove(), 3000);</script>
