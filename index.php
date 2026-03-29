@@ -2,37 +2,7 @@
 include 'db.php';
 session_start();
 
-// --- LÓGICA PARA REGISTRAR NUEVO EMPLEADO DESDE EL MODAL ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])) {
-    $ced = trim($_POST['cedula_new']);
-    $nom = trim($_POST['nombre_new']);
-    $car = trim($_POST['cargo_new']);
-
-    // Verificar si ya existe
-    $check = $conn->prepare("SELECT cedula FROM empleados WHERE cedula = ?");
-    $check->bind_param("s", $ced);
-    $check->execute();
-    if ($check->get_result()->num_rows > 0) {
-        $_SESSION['mensaje'] = "Error: La cédula $ced ya está registrada.";
-        $_SESSION['tipo_mensaje'] = "danger";
-    } else {
-        $ins = $conn->prepare("INSERT INTO empleados (cedula, nombre, cargo) VALUES (?, ?, ?)");
-        $ins->bind_param("sss", $ced, $nom, $car);
-        if ($ins->execute()) {
-            $_SESSION['mensaje'] = "Empleado $nom registrado con éxito.";
-            $_SESSION['tipo_mensaje'] = "success";
-        }
-    }
-    header("Location: index.php");
-    exit();
-}
-?>
-
-<<?php 
-include 'db.php';
-session_start();
-
-// Lógica de Registro de Usuario Pro
+// --- LÓGICA DE REGISTRO DE USUARIO ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])) {
     $ced = trim($_POST['cedula_new']);
     $nom = trim($_POST['nombre_new']);
@@ -41,10 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])
     $stmt = $conn->prepare("INSERT INTO empleados (cedula, nombre, cargo) VALUES (?, ?, ?)");
     $stmt->bind_param("sss", $ced, $nom, $car);
     if ($stmt->execute()) {
-        $_SESSION['mensaje'] = "Empleado registrado: $nom";
+        $_SESSION['mensaje'] = "Empleado registrado con éxito";
         $_SESSION['tipo_mensaje'] = "success";
     } else {
-        $_SESSION['mensaje'] = "Error: Cédula duplicada";
+        $_SESSION['mensaje'] = "Error: Cédula ya existe";
         $_SESSION['tipo_mensaje'] = "danger";
     }
     header("Location: index.php"); exit();
@@ -55,254 +25,224 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Time Control</title>
+    <title>Reloj Laboral | Premium Edition</title>
     
-    <!-- Fuentes y Recursos Pro -->
+    <!-- Recursos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --bg-deep: #0a0a0b;
-            --card-bg: #111113;
-            --accent: #ffffff;
-            --border: rgba(255, 255, 255, 0.08);
-            --text-mute: #a1a1aa;
-        }
-
         body {
-            background-color: var(--bg-deep);
-            color: white;
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            height: 100vh;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0;
+            overflow: hidden;
         }
 
-        /* Fondo Decorativo de Red */
-        body::before {
-            content: "";
-            position: absolute;
-            width: 100%; height: 100%;
-            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0);
-            background-size: 40px 40px;
-            z-index: -1;
-        }
-
-        /* Contenedor Principal Pro */
-        .main-dashboard {
-            width: 100%;
-            max-width: 1000px;
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        /* Panel Izquierdo: Reloj y Estado */
-        .status-panel {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 40px 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .system-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-        #reloj-pro {
-            font-family: 'Geist Mono', monospace;
-            font-size: 4.5rem;
-            letter-spacing: -4px;
-            margin: 20px 0;
-            font-weight: 700;
-        }
-
-        /* Panel Derecho: Acciones */
-        .actions-panel {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 40px;
-            position: relative;
-        }
-
-        .input-group-pro {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 30px;
-            transition: 0.3s;
-        }
-
-        .input-group-pro:focus-within {
-            border-color: var(--accent);
-            background: rgba(255,255,255,0.05);
-        }
-
-        .input-group-pro input {
-            background: transparent;
-            border: none;
+        /* Botón de Agregar Usuario (Esquina Superior) */
+        .btn-add-floating {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
-            width: 100%;
-            font-size: 1.2rem;
-            outline: none;
-            text-align: center;
+            padding: 12px 20px;
+            border-radius: 15px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
         }
 
-        /* Botones Estilo Grid Neumórfico Oscuro */
-        .action-grid {
+        .btn-add-floating:hover {
+            background: white;
+            color: #6366f1;
+            transform: translateY(-3px);
+        }
+
+        /* Tarjeta Reloj (Glassmorphism) */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 35px;
+            padding: 50px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            text-align: center;
+            color: white;
+        }
+
+        #reloj {
+            font-size: 5rem;
+            font-weight: 800;
+            margin: 10px 0;
+            letter-spacing: -2px;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .fecha-top {
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            opacity: 0.8;
+            font-weight: 600;
+        }
+
+        /* Input y Botones */
+        .input-pro {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 2px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 18px !important;
+            color: white !important;
+            padding: 15px !important;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .input-pro::placeholder { color: rgba(255,255,255,0.6); }
+
+        .btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
 
-        .btn-pro {
-            background: #18181b;
-            border: 1px solid var(--border);
-            color: white;
-            padding: 20px;
-            border-radius: 18px;
-            font-weight: 600;
+        .btn-action {
+            padding: 18px;
+            border-radius: 20px;
+            border: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: 0.3s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            gap: 8px;
         }
 
-        .btn-pro i { font-size: 24px; color: var(--text-mute); }
+        .btn-action i { font-size: 1.5rem; }
 
-        .btn-pro:hover {
-            background: #27272a;
+        .btn-in { background: #10b981; color: white; grid-column: span 2; }
+        .btn-out { background: #ef4444; color: white; grid-column: span 2; }
+        .btn-lunch-start { background: #f59e0b; color: white; }
+        .btn-lunch-end { background: #0ea5e9; color: white; }
+
+        .btn-action:hover {
             transform: translateY(-5px);
-            border-color: rgba(255,255,255,0.2);
+            filter: brightness(1.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
-        .btn-pro:hover i { color: var(--accent); }
-
-        .btn-pro.primary { background: var(--accent); color: black; }
-        .btn-pro.primary i { color: black; }
-
-        /* Notificaciones Superiores */
-        .toast-pro {
+        /* Toasts Pro */
+        .custom-toast {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #ffffff;
-            color: #000;
+            background: white;
             padding: 15px 25px;
-            border-radius: 12px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
             display: flex;
             align-items: center;
             gap: 12px;
-            font-weight: 600;
-            z-index: 10000;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            animation: slideUp 0.4s ease-out;
+            z-index: 2000;
+            animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        .report-link {
+            display: block;
+            margin-top: 30px;
+            color: white;
+            text-decoration: none;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        .report-link:hover { opacity: 1; text-decoration: underline; }
 
     </style>
 </head>
 <body>
 
-    <!-- Notificaciones Pro -->
-    <?php if (isset($_SESSION['mensaje'])): ?>
-        <div class="toast-pro" id="toast">
-            <i class="ph-bold ph-bell-ringing"></i>
-            <?= $_SESSION['mensaje']; ?>
+    <!-- Botón de Registro -->
+    <a href="#" class="btn-add-floating" data-bs-toggle="modal" data-bs-target="#modalUser">
+        <i class="ph-bold ph-user-plus"></i> Registrar Nuevo
+    </a>
+
+    <!-- Notificaciones -->
+    <?php if(isset($_SESSION['mensaje'])): ?>
+        <div class="custom-toast">
+            <i class="ph-bold ph-bell" style="color: #6366f1; font-size: 1.5rem;"></i>
+            <span style="font-weight: 600; color: #1e293b;"><?= $_SESSION['mensaje'] ?></span>
         </div>
-        <script>setTimeout(() => document.getElementById('toast').remove(), 4000);</script>
+        <script>setTimeout(() => document.querySelector('.custom-toast').remove(), 3000);</script>
         <?php unset($_SESSION['mensaje']); ?>
     <?php endif; ?>
 
-    <div class="main-dashboard">
-        <!-- Lado Izquierdo -->
-        <div class="status-panel">
-            <div>
-                <div class="system-badge">
-                    <div class="dot"></div> System Live
-                </div>
-                <div id="reloj-pro">00:00</div>
-                <div id="fecha-pro" style="color: var(--text-mute); font-weight: 500;">---</div>
-            </div>
+    <div class="glass-card">
+        <div class="fecha-top" id="fecha">---</div>
+        <div id="reloj">00:00</div>
+        
+        <form action="procesar_marcado.php" method="POST">
+            <input type="text" name="cedula" class="form-control input-pro" placeholder="Ingrese Cédula" required autofocus>
             
-            <div class="mt-4">
-                <button class="btn btn-outline-light w-100 mb-2" style="border-radius: 12px; border: 1px solid var(--border);" data-bs-toggle="modal" data-bs-target="#modalAdd">
-                    <i class="ph ph-user-plus me-2"></i> Nuevo Perfil
+            <div class="btn-grid">
+                <button type="submit" name="accion" value="ingreso" class="btn-action btn-in">
+                    <i class="ph-bold ph-sign-in"></i> Entrada Principal
                 </button>
-                <a href="reporte.php" class="text-white text-decoration-none d-block text-center mt-3 opacity-50">Log de Actividad</a>
+                <button type="submit" name="accion" value="ini_refri" class="btn-action btn-lunch-start">
+                    <i class="ph-bold ph-coffee"></i> Almuerzo
+                </button>
+                <button type="submit" name="accion" value="fin_refri" class="btn-action btn-lunch-end">
+                    <i class="ph-bold ph-fork-knife"></i> Retorno
+                </button>
+                <button type="submit" name="accion" value="salida" class="btn-action btn-out">
+                    <i class="ph-bold ph-door-open"></i> Salida Turno
+                </button>
             </div>
-        </div>
+        </form>
 
-        <!-- Lado Derecho -->
-        <div class="actions-panel">
-            <h4 class="mb-4 fw-800">Terminal de Asistencia</h4>
-            
-            <form action="procesar_marcado.php" method="POST">
-                <div class="input-group-pro">
-                    <label class="d-block text-center mb-2 text-uppercase small opacity-50 fw-bold">ID de Colaborador</label>
-                    <input type="text" name="cedula" placeholder="000-000-000" required autofocus>
-                </div>
-
-                <div class="action-grid">
-                    <button type="submit" name="accion" value="ingreso" class="btn-pro primary">
-                        <i class="ph-bold ph-sign-in"></i> Entrada
-                    </button>
-                    <button type="submit" name="accion" value="salida" class="btn-pro">
-                        <i class="ph-bold ph-sign-out"></i> Salida
-                    </button>
-                    <button type="submit" name="accion" value="ini_refri" class="btn-pro">
-                        <i class="ph-bold ph-coffee"></i> Inic. Receso
-                    </button>
-                    <button type="submit" name="accion" value="fin_refri" class="btn-pro">
-                        <i class="ph-bold ph-bowl-food"></i> Fin Receso
-                    </button>
-                </div>
-            </form>
-        </div>
+        <a href="reporte.php" class="report-link">Ver historial de asistencias <i class="ph ph-arrow-right"></i></a>
     </div>
 
-    <!-- Modal de Registro Nivel Pro -->
-    <div class="modal fade" id="modalAdd" tabindex="-1">
+    <!-- Modal Pro de Registro -->
+    <div class="modal fade" id="modalUser" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-dark border-secondary text-white" style="border-radius: 20px;">
-                <div class="modal-body p-4">
-                    <h5 class="mb-4">Crear Credencial Nueva</h5>
+            <div class="modal-content" style="border-radius: 25px; border: none;">
+                <div class="modal-body p-5">
+                    <h4 class="fw-800 mb-4 text-center" style="color: #1e293b;">Crear Nuevo Perfil</h4>
                     <form action="index.php" method="POST">
                         <div class="mb-3">
-                            <input type="text" name="cedula_new" class="form-control bg-transparent text-white border-secondary" placeholder="Cédula" required>
+                            <label class="form-label fw-bold">Número de Cédula</label>
+                            <input type="text" name="cedula_new" class="form-control" style="border-radius: 12px;" required>
                         </div>
                         <div class="mb-3">
-                            <input type="text" name="nombre_new" class="form-control bg-transparent text-white border-secondary" placeholder="Nombre Completo" required>
+                            <label class="form-label fw-bold">Nombre Completo</label>
+                            <input type="text" name="nombre_new" class="form-control" style="border-radius: 12px;" required>
                         </div>
-                        <div class="mb-3">
-                            <input type="text" name="cargo_new" class="form-control bg-transparent text-white border-secondary" placeholder="Cargo / Área" required>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Cargo</label>
+                            <input type="text" name="cargo_new" class="form-control" style="border-radius: 12px;" required>
                         </div>
-                        <button type="submit" name="registrar_empleado" class="btn btn-light w-100 py-2">Generar Registro</button>
+                        <button type="submit" name="registrar_empleado" class="btn btn-primary w-100 py-3 fw-bold" style="border-radius: 15px; background: #6366f1;">
+                            Finalizar Registro
+                        </button>
                     </form>
                 </div>
             </div>
@@ -311,19 +251,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['registrar_empleado'])
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function updateClock() {
+        function update() {
             const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            
-            document.getElementById('reloj-pro').innerHTML = `${h}:${m}<span style="font-size: 1.5rem; opacity: 0.3; margin-left: 5px;">${s}</span>`;
-            
-            const options = { weekday: 'long', day: 'numeric', month: 'short' };
-            document.getElementById('fecha-pro').innerText = now.toLocaleDateString('es-ES', options).toUpperCase();
+            document.getElementById('reloj').innerText = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false });
+            document.getElementById('fecha').innerText = now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(update, 1000);
+        update();
     </script>
 </body>
 </html>
