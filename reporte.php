@@ -20,7 +20,6 @@
             --info: #0ea5e9;
             --danger: #ef4444;
             --text-main: #e9ecf1;
-            
         }
 
         /* Si prefieres mantener un modo oscuro pero NO NEGRO, usa estos: */
